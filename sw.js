@@ -1,5 +1,5 @@
 // Jimit Pet LLP — Service Worker
-const CACHE = "jimit-pet-v1";
+const CACHE = "jimit-pet-v2";
 const ASSETS = [
   "./JimitPetLLP_Final.html",
   "./manifest.json"
@@ -25,9 +25,13 @@ self.addEventListener("activate", e => {
 
 // Fetch — network first, fallback to cache
 self.addEventListener("fetch", e => {
-  // Google Sheets API — always network
+  // Google Sheets API — DO NOT intercept. Previously this SW re-fetched these
+  // requests itself, but that internal fetch was failing with CORS errors in
+  // some browsers/networks even when the real internet connection was fine —
+  // silently returning a synthetic {"error":"offline"} response and causing
+  // real pushed data to be lost. Now we simply let the browser handle these
+  // requests natively, with zero involvement from the service worker.
   if(e.request.url.includes("script.google.com")) {
-    e.respondWith(fetch(e.request).catch(() => new Response('{"error":"offline"}')));
     return;
   }
   // App files — network first, then cache
